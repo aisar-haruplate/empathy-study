@@ -1,0 +1,6 @@
+{
+  "name": "Empathy Study Transcript Hub",
+  "description": "Interview recording intake and transcription platform for nutrition empathy studies, supporting direct Google Drive imports and local audio/document uploads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
