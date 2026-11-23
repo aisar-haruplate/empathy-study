@@ -1,31 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { User } from 'firebase/auth';
-import { Header } from './components/Header';
-import { PipelineNav } from './components/PipelineNav';
-import { InputSection } from './components/InputSection';
-import { SortBar } from './components/SortBar';
-import { TranscriptCard } from './components/TranscriptCard';
-import { SessionGroupCard } from './components/SessionGroupCard';
-import { Module2DataCleaning } from './components/Module2DataCleaning';
-import { Module3DecodeAnalysis } from './components/Module3DecodeAnalysis';
-import { Module4CrossAnalysis } from './components/Module4CrossAnalysis';
-import { DrivePickerModal } from './components/DrivePickerModal';
-import { ExpandedTranscriptModal } from './components/ExpandedTranscriptModal';
-import { UniversalUploadModal } from './components/UniversalUploadModal';
-import { AiAnalysisAssistant } from './components/AiAnalysisAssistant';
-import { CombineSplitModal } from './components/CombineSplitModal';
-import { VersionControlModal } from './components/VersionControlModal';
+import { Header } from './components/layout/Header';
+import { InputSection } from './components/layout/InputSection';
+import { SortBar } from './components/layout/SortBar';
+import { TranscriptCard } from './components/layout/TranscriptCard';
+import { SessionGroupCard } from './components/layout/SessionGroupCard';
+import { Module2DataCleaning } from './components/cleaning/Module2DataCleaning';
+import { Module3DecodeAnalysis } from './components/synthesis/Module3DecodeAnalysis';
+import { Module4CrossAnalysis } from './components/synthesis/Module4CrossAnalysis';
+import { DrivePickerModal } from './components/layout/DrivePickerModal';
+import { ExpandedTranscriptModal } from './components/layout/ExpandedTranscriptModal';
+import { UniversalUploadModal } from './components/layout/UniversalUploadModal';
+import { AiAnalysisAssistant } from './components/synthesis/AiAnalysisAssistant';
+import { CombineSplitModal } from './components/layout/CombineSplitModal';
+import { VersionControlModal } from './components/layout/VersionControlModal';
 import {
   InterviewRecord,
   SortMode,
   DriveFileItem,
   ActiveModule,
   InterviewSession,
-  CrossAnalysisFormula,
-  AiVersionHistoryItem,
 } from './types';
-import { initAuth, googleSignIn, logout, getAccessToken } from './lib/firebase';
-import { downloadDriveFile, blobToBase64 } from './lib/drive';
+import { getAccessToken } from './services/firebaseAuthService';
+import { downloadDriveFile, blobToBase64 } from './services/googleDriveService';
+import { useAuthState, useAiVersionHistory } from './state';
 import { performRecordingAudit, SplitCandidatePair } from './lib/recordingAudit';
 import {
   containsInterviewContent,
@@ -78,110 +75,31 @@ export default function App() {
   const [searchFilter, setSearchFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'audio' | 'text'>('all');
 
-  // Google Auth & Drive State
-  const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
+  // Google Auth & Drive State (delegated to thin state hook)
+  const {
+    user,
+    accessToken,
+    isConnectingGoogle,
+    authError,
+    clearAuthError,
+    connectGoogle,
+    signOutGoogle,
+  } = useAuthState();
   const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   // Active Expanded Modal
   const [expandedRecord, setExpandedRecord] = useState<InterviewRecord | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // In-App AI Assistant & Version Control State
+  // In-App AI Assistant & Version Control State (delegated to thin state hook)
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
-  const [aiVersionHistory, setAiVersionHistory] = useState<AiVersionHistoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('empathy_ai_version_history');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn('Could not load AI version history', e);
-    }
-    return [];
-  });
-
-  // Persist version history
-  useEffect(() => {
-    try {
-      localStorage.setItem('empathy_ai_version_history', JSON.stringify(aiVersionHistory));
-    } catch (e) {
-      console.warn('Could not save AI version history', e);
-    }
-  }, [aiVersionHistory]);
-
-  const handleAddFormulaFromAi = (formula: CrossAnalysisFormula) => {
-    try {
-      const saved = localStorage.getItem('empathy_cross_analysis_formulas');
-      let current: CrossAnalysisFormula[] = saved ? JSON.parse(saved) : [];
-      if (!current.some((f) => f.id === formula.id)) {
-        current = [...current, formula];
-        localStorage.setItem('empathy_cross_analysis_formulas', JSON.stringify(current));
-        window.dispatchEvent(new Event('empathy_formulas_updated'));
-      }
-
-      // Record in version history
-      const versionItem: AiVersionHistoryItem = {
-        id: 'ver_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-        timestamp: Date.now(),
-        actionType: 'add_formula',
-        targetId: formula.id,
-        title: formula.name,
-        description: `${formula.description} (${formula.code} | ${formula.analysisCodes})`,
-        snapshot: formula,
-        reverted: false,
-      };
-
-      setAiVersionHistory((prev) => [versionItem, ...prev.filter((v) => v.targetId !== formula.id)]);
-    } catch (e) {
-      console.warn('Failed to save AI formula to localStorage', e);
-    }
-  };
-
-  const handleRevertAiAction = (versionId: string) => {
-    setAiVersionHistory((prev) =>
-      prev.map((v) => {
-        if (v.id === versionId) {
-          if (v.targetId) {
-            try {
-              const saved = localStorage.getItem('empathy_cross_analysis_formulas');
-              if (saved) {
-                const current: CrossAnalysisFormula[] = JSON.parse(saved);
-                const updated = current.filter((f) => f.id !== v.targetId);
-                localStorage.setItem('empathy_cross_analysis_formulas', JSON.stringify(updated));
-                window.dispatchEvent(new Event('empathy_formulas_updated'));
-              }
-            } catch (e) {
-              console.warn('Failed to remove formula on revert', e);
-            }
-          }
-          return { ...v, reverted: true, revertedAt: Date.now() };
-        }
-        return v;
-      })
-    );
-  };
-
-  const handleRevertFormulaById = (formulaId: string) => {
-    try {
-      const saved = localStorage.getItem('empathy_cross_analysis_formulas');
-      if (saved) {
-        const current: CrossAnalysisFormula[] = JSON.parse(saved);
-        const updated = current.filter((f) => f.id !== formulaId);
-        localStorage.setItem('empathy_cross_analysis_formulas', JSON.stringify(updated));
-        window.dispatchEvent(new Event('empathy_formulas_updated'));
-      }
-    } catch (e) {
-      console.warn('Failed to remove formula on revert', e);
-    }
-
-    setAiVersionHistory((prev) =>
-      prev.map((v) =>
-        v.targetId === formulaId ? { ...v, reverted: true, revertedAt: Date.now() } : v
-      )
-    );
-  };
+  const {
+    aiVersionHistory,
+    addFormulaFromAi: handleAddFormulaFromAi,
+    revertAiAction: handleRevertAiAction,
+    revertFormulaById: handleRevertFormulaById,
+  } = useAiVersionHistory();
 
   // Sync to local storage
   useEffect(() => {
@@ -199,46 +117,12 @@ export default function App() {
     }
   }, [records]);
 
-  // Initialize Firebase Auth listener
-  useEffect(() => {
-    const unsubscribe = initAuth(
-      (currentUser, token) => {
-        setUser(currentUser);
-        setAccessToken(token);
-      },
-      () => {
-        setUser(null);
-        setAccessToken(null);
-      }
-    );
-    return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-    };
-  }, []);
-
   const handleConnectGoogle = async () => {
-    setIsConnectingGoogle(true);
-    setAuthError(null);
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        setUser(result.user);
-        setAccessToken(result.accessToken);
-        setIsDriveModalOpen(true);
-      }
-    } catch (err: any) {
-      console.error('Google sign-in error:', err);
-      const code = err?.code ? ` (${err.code})` : '';
-      setAuthError(err?.message ? `Google sign-in failed${code}: ${err.message}` : 'Google sign-in failed. Please allow popups and try again.');
-    } finally {
-      setIsConnectingGoogle(false);
-    }
+    await connectGoogle(() => setIsDriveModalOpen(true));
   };
 
   const handleLogout = async () => {
-    await logout();
-    setUser(null);
-    setAccessToken(null);
+    await signOutGoogle();
   };
 
   const handleOpenGoogleDrive = () => {
@@ -1016,7 +900,34 @@ export default function App() {
   const evaluatedCount = records.filter((r) => isHumanVerifiedRecord(r) && r.crossAnalysisEvaluations && Object.keys(r.crossAnalysisEvaluations).length > 0).length;
 
   return (
-    <div className="min-h-screen bg-stone-100 text-stone-900 font-sans selection:bg-amber-200 w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#FDFCF8] text-[#292524] font-sans selection:bg-[#FEFBEB] selection:text-[#292524] w-full max-w-full overflow-x-hidden relative">
+      {/* Subtle Paper Grain Texture strictly on app canvas */}
+      <svg
+        aria-hidden="true"
+        className="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-[0.14] mix-blend-multiply"
+      >
+        <filter id="empathy-paper-grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.65"
+            numOctaves="3"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#empathy-paper-grain)" />
+      </svg>
+
+      {/* Atmospheric Material You organic blur shapes (Mint Green, Cornflower Blue, Sunburst Yellow) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden no-print"
+      >
+        <div className="absolute -top-28 -left-24 w-96 h-96 rounded-full bg-[#96D6C7]/25 blur-3xl mix-blend-multiply" />
+        <div className="absolute top-32 -right-24 w-[28rem] h-[28rem] rounded-full bg-[#528BCA]/18 blur-3xl mix-blend-multiply" />
+        <div className="absolute bottom-12 left-1/3 w-80 h-80 rounded-full bg-[#F7D147]/20 blur-3xl mix-blend-multiply" />
+      </div>
+
       {/* Unified Space-Saving Top Navigation Bar */}
       <Header
         user={user}
@@ -1040,37 +951,37 @@ export default function App() {
       />
 
       {/* Main App Container */}
-      <main className="w-full max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-28 min-w-0 overflow-x-hidden">
+      <main className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-6 pt-5 sm:pt-7 pb-28 min-w-0 overflow-x-hidden">
         {/* MODULE 1: INTAKE & TRANSCRIPTION (Grouped by Folder Hierarchy) */}
         {activeModule === 'module1_transcript' && (
           <div className="space-y-6">
             {/* Module 1 Context Intro */}
-            <div className="bg-gradient-to-r from-amber-50 via-orange-50/50 to-stone-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">
+            <div className="bg-[#F2F5F3] rounded-[32px] p-5 sm:p-7 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <HeartHandshake className="w-5 h-5" />
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#DCE8F7] text-[#132B47] flex items-center justify-center shrink-0">
+                    <HeartHandshake className="w-6 h-6 text-[#528BCA]" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-base font-bold text-stone-900">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h2 className="font-heading text-2xl sm:text-[32px] leading-tight font-medium text-[#1C1B1F] tracking-[-0.01em]">
                         Step 1: Transcribe
                       </h2>
-                      <span className="text-xs text-stone-500 font-medium">
-                        ({completedTranscriptCount} of {records.length} transcribed)
+                      <span className="px-3.5 py-1 rounded-full text-xs font-medium text-[#133830] bg-[#DDF3ED] tabular-nums">
+                        {completedTranscriptCount} of {records.length} transcribed
                       </span>
                     </div>
-                    <p className="text-xs text-stone-600 mt-1 max-w-2xl">
+                    <p className="text-base text-[#444846] mt-1.5 max-w-2xl leading-relaxed">
                       Import interview recordings and notes from Google Drive or local files, organized automatically by interview date.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-                  <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
-                    View:
+                  <span className="text-xs font-medium text-[#727975] uppercase tracking-wider">
+                    View
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-stone-800 border border-stone-200 shadow-2xs">
+                  <span className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#E7ECE9] text-[#1C1B1F]">
                     {groupByFolder ? 'Date Folders' : 'All Files'}
                   </span>
                 </div>
@@ -1079,19 +990,19 @@ export default function App() {
 
             {/* Step 1 Completion Signal */}
             {records.length > 0 && completedTranscriptCount === records.length && !isProcessing && (
-              <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+              <div className="bg-[#DDF3ED] rounded-[32px] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <CheckCircle2 className="w-6 h-6" />
+                  <div className="w-11 h-11 rounded-full bg-[#4FA896] text-white flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-emerald-950 flex items-center gap-2">
+                    <div className="text-xl font-heading font-medium text-[#133830] flex items-center gap-2 flex-wrap">
                       <span>Step 1 Complete</span>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <span className="text-xs font-medium px-3 py-0.5 rounded-full bg-[#96D6C7]/60 text-[#133830] tabular-nums">
                         All {completedTranscriptCount} Transcribed
                       </span>
                     </div>
-                    <p className="text-xs text-emerald-800 mt-0.5">
+                    <p className="text-base text-[#133830]/90 mt-1 leading-relaxed">
                       All interview recordings are transcribed and organized. You are ready to clean and polish conversational text.
                     </p>
                   </div>
@@ -1099,7 +1010,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setActiveModule('module2_clean')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer transition-all shrink-0 hover:translate-x-0.5"
+                  className="md3-btn-primary inline-flex items-center gap-2 px-6 py-2.5 cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   <span>Proceed to Step 2: Clean Text</span>
                   <ArrowRight className="w-4 h-4" />
@@ -1109,15 +1020,41 @@ export default function App() {
 
             {/* Google Sign-In Error Banner */}
             {authError && (
-              <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 flex items-start justify-between gap-3 text-xs text-rose-900">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <span>{authError}</span>
+              <div
+                role="alert"
+                className="bg-[#FDF4F3] border border-[#D97A75]/50 rounded-2xl p-4 flex items-start justify-between gap-4 text-sm text-[#7A3A36]"
+              >
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <AlertCircle className="w-4 h-4 text-[#D97A75] shrink-0 mt-0.5" />
+                  <div className="space-y-1.5 min-w-0">
+                    <p className="font-heading font-bold text-[#292524] text-base leading-snug">
+                      {authError.title}
+                    </p>
+                    <p className="text-[#7A3A36] leading-relaxed">{authError.message}</p>
+                    <p className="text-[#57534E] leading-relaxed">{authError.guidance}</p>
+                    {authError.consoleUrl && (
+                      <div className="pt-1 flex flex-wrap items-center gap-2">
+                        <a
+                          href={authError.consoleUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D97A75] hover:bg-[#C66661] text-white text-xs font-semibold shadow-2xs transition-colors"
+                        >
+                          Open Firebase Auth Settings
+                        </a>
+                        {authError.hostname && (
+                          <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-white border border-[#D97A75]/35 text-[#7A3A36]">
+                            Domain: {authError.hostname}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setAuthError(null)}
-                  className="text-rose-700 hover:text-rose-900 font-semibold shrink-0 cursor-pointer"
+                  onClick={clearAuthError}
+                  className="text-[#7A3A36] hover:underline font-semibold shrink-0 cursor-pointer text-sm"
                 >
                   Dismiss
                 </button>
@@ -1150,21 +1087,21 @@ export default function App() {
 
             {/* Top Duplicate Interview Session Reminder Banner */}
             {duplicateSessions.length > 0 && (
-              <div className="bg-rose-50 border-2 border-rose-500 rounded-2xl p-4 sm:p-5 shadow-sm text-rose-950 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in">
+              <div className="bg-[#FDF4F3] border border-[#D97A75]/55 rounded-3xl p-4 sm:p-5 shadow-studio text-[#7A3A36] flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <AlertTriangle className="w-5 h-5 animate-pulse" />
+                  <div className="w-10 h-10 rounded-2xl bg-[#D97A75] text-white flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-rose-950">
-                        Duplicate Interview Session Detected ({duplicateSessions.length} session{duplicateSessions.length > 1 ? 's' : ''} highlighted in red)
+                      <h4 className="text-lg font-bold text-[#7A3A36]">
+                        Duplicate Interview Session Detected ({duplicateSessions.length} session{duplicateSessions.length > 1 ? 's' : ''} highlighted)
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-200 text-rose-900 uppercase tracking-wide">
+                      <span className="text-[13px] font-bold px-2.5 py-0.5 rounded-full bg-[#F6BEBA] text-[#292524] tracking-wide">
                         Action Required
                       </span>
                     </div>
-                    <p className="text-xs text-rose-800 mt-1 leading-relaxed">
+                    <p className="text-base text-[#7A3A36]/90 mt-1 leading-relaxed">
                       Sessions <span className="font-bold underline">{duplicateSessions.map((s) => s.folderName).join(', ')}</span> share identical dates, folders, or duplicate audio files. Review highlighted cards below or clean up with one click.
                     </p>
                   </div>
@@ -1173,9 +1110,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleRemoveAllDuplicateSessions}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs cursor-pointer transition-all flex items-center gap-1.5"
+                    className="px-4 py-2.5 rounded-full text-sm font-semibold bg-[#D97A75] hover:bg-[#C66661] text-white shadow-xs cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                     <span>Remove All Duplicates</span>
                   </button>
                 </div>
@@ -1184,22 +1121,22 @@ export default function App() {
 
             {/* Split Recordings Detected Alert Banner */}
             {recordingAudit.splitRecordingPairs.length > 0 && (
-              <div className="bg-amber-50 border-2 border-amber-500 rounded-2xl p-4 sm:p-5 shadow-sm text-amber-950 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in">
+              <div className="bg-[#FEFBEB] border border-[#F7D147] rounded-3xl p-4 sm:p-5 shadow-studio text-[#6B5306] flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <GitMerge className="w-5 h-5 animate-pulse" />
+                  <div className="w-10 h-10 rounded-2xl bg-[#F7D147] text-[#292524] flex items-center justify-center shrink-0">
+                    <GitMerge className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-amber-950">
+                      <h4 className="text-lg font-bold text-[#292524]">
                         Split Recording Detected ({recordingAudit.splitRecordingPairs.length} pair{recordingAudit.splitRecordingPairs.length > 1 ? 's' : ''} found)
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 uppercase tracking-wide">
-                        Same Name • Different Conversation
+                      <span className="text-[13px] font-bold px-2.5 py-0.5 rounded-full bg-[#F7D147]/40 text-[#6B5306] tracking-wide">
+                        Same Name · Different Conversation
                       </span>
                     </div>
-                    <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                      Files like <span className="font-bold underline">{recordingAudit.splitRecordingPairs.map((p) => p.fileName).slice(0, 3).join(', ')}</span> share the same name but have completely different opening dialogues (likely Part 1 &amp; Part 2 of the same interview). Combine them into a continuous transcript without losing either half!
+                    <p className="text-base text-[#57534E] mt-1 leading-relaxed">
+                      Files like <span className="font-bold underline text-[#292524]">{recordingAudit.splitRecordingPairs.map((p) => p.fileName).slice(0, 3).join(', ')}</span> share the same name but have completely different opening dialogues (likely Part 1 &amp; Part 2 of the same interview). Combine them into a continuous transcript without losing either half.
                     </p>
                   </div>
                 </div>
@@ -1210,9 +1147,9 @@ export default function App() {
                       setSplitModalPair(recordingAudit.splitRecordingPairs[0]);
                       setIsSplitModalOpen(true);
                     }}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs cursor-pointer transition-all flex items-center gap-1.5"
+                    className="px-4 py-2.5 rounded-full text-sm font-semibold bg-[#292524] hover:bg-[#3F3A38] text-white shadow-xs cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap"
                   >
-                    <GitMerge className="w-3.5 h-3.5" />
+                    <GitMerge className="w-4 h-4" />
                     <span>Review &amp; Combine Recordings</span>
                   </button>
                 </div>
@@ -1221,21 +1158,21 @@ export default function App() {
 
             {/* Exact Duplicate Recordings Alert Banner */}
             {recordingAudit.exactDuplicateRecordIds.size > 0 && (
-              <div className="bg-rose-50 border-2 border-rose-500 rounded-2xl p-4 sm:p-5 shadow-sm text-rose-950 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in">
+              <div className="bg-[#FDF4F3] border border-[#D97A75]/55 rounded-3xl p-4 sm:p-5 shadow-studio text-[#7A3A36] flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <AlertTriangle className="w-5 h-5 animate-pulse" />
+                  <div className="w-10 h-10 rounded-2xl bg-[#D97A75] text-white flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-rose-950">
-                        Exact Duplicate Recordings Detected ({recordingAudit.exactDuplicateRecordIds.size} file{recordingAudit.exactDuplicateRecordIds.size > 1 ? 's' : ''} highlighted in red)
+                      <h4 className="text-lg font-bold text-[#7A3A36]">
+                        Exact Duplicate Recordings Detected ({recordingAudit.exactDuplicateRecordIds.size} file{recordingAudit.exactDuplicateRecordIds.size > 1 ? 's' : ''} highlighted)
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-200 text-rose-900 uppercase tracking-wide">
+                      <span className="text-[13px] font-bold px-2.5 py-0.5 rounded-full bg-[#F6BEBA] text-[#292524] tracking-wide">
                         Identical Dialogue
                       </span>
                     </div>
-                    <p className="text-xs text-rose-800 mt-1 leading-relaxed">
+                    <p className="text-base text-[#7A3A36]/90 mt-1 leading-relaxed">
                       Audit verified the first 3 conversation lines match existing files. You can safely remove redundant duplicates while keeping the original.
                     </p>
                   </div>
@@ -1244,9 +1181,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleRemoveExactDuplicates}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs cursor-pointer transition-all flex items-center gap-1.5"
+                    className="px-4 py-2.5 rounded-full text-sm font-semibold bg-[#D97A75] hover:bg-[#C66661] text-white shadow-xs cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                     <span>Delete All Exact Duplicates ({recordingAudit.exactDuplicateRecordIds.size})</span>
                   </button>
                 </div>
@@ -1255,24 +1192,27 @@ export default function App() {
 
             {/* Transcript Results: Either Grouped by Date Folder or Flat List */}
             {records.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-2xs">
-                <div className="w-14 h-14 rounded-2xl bg-stone-100 text-stone-400 flex items-center justify-center mx-auto mb-3">
+              <div className="bg-white rounded-3xl border border-[#EAE6DF] p-12 text-center shadow-studio">
+                <div className="w-14 h-14 rounded-2xl bg-[#F7F5F0] border border-[#EAE6DF] text-[#78716C] flex items-center justify-center mx-auto mb-3.5">
                   <Inbox className="w-7 h-7" />
                 </div>
-                <h3 className="text-sm font-bold text-stone-800">
+                <h3 className="text-xl font-bold text-[#292524] tracking-[-0.02em]">
                   No interview recordings imported yet
                 </h3>
-                <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto">
-                  Browse Google Drive & Shared Drives to select your interview date folder (e.g. 10/26 with audio recordings & Meta Data document).
+                <p className="text-lg text-[#57534E] mt-2 leading-relaxed">
+                  Start by picking a field folder or dropping in an audio recording.
+                </p>
+                <p className="text-base text-[#78716C] mt-2 max-w-lg mx-auto leading-relaxed">
+                  Browse Google Drive &amp; Shared Drives to select your interview date folder (e.g. 10/26 with audio recordings &amp; Meta Data document).
                 </p>
 
-                <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="flex items-center justify-center gap-2 mt-5">
                   <button
                     type="button"
                     onClick={handleOpenGoogleDrive}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-full bg-[#528BCA] hover:bg-[#4178B6] text-white shadow-xs cursor-pointer transition-all whitespace-nowrap"
                   >
-                    <HardDrive className="w-3.5 h-3.5" />
+                    <HardDrive className="w-4 h-4" />
                     Import from Google Drive / Shared Drives
                   </button>
                 </div>
@@ -1412,6 +1352,8 @@ export default function App() {
         accessToken={accessToken}
         onImportFiles={handleBatchDriveImport}
         onConnectGoogle={handleConnectGoogle}
+        authError={authError}
+        onDismissAuthError={clearAuthError}
       />
 
       {/* Expanded Transcript Modal */}

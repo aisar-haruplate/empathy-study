@@ -437,11 +437,11 @@ const classifyUnderstandingTheme = (text: string): string => {
 };
 
 export const TIMING_BUCKETS = [
-  { id: 'daily_morning', label: 'Daily / Every Morning', color: '#be123c' },
-  { id: 'weekly', label: 'Weekly', color: '#e11d48' },
-  { id: 'occasionally', label: 'Occasionally / As Needed', color: '#f43f5e' },
-  { id: 'when_unwell', label: 'When Unwell / Constipated', color: '#fb7185' },
-  { id: 'monthly_restock', label: 'Monthly / Periodic Restock', color: '#fda4af' },
+  { id: 'daily_morning', label: 'Daily / Every Morning', color: '#B85D58' },
+  { id: 'weekly', label: 'Weekly', color: '#D97A75' },
+  { id: 'occasionally', label: 'Occasionally / As Needed', color: '#E38D88' },
+  { id: 'when_unwell', label: 'When Unwell / Constipated', color: '#EDA5A0' },
+  { id: 'monthly_restock', label: 'Monthly / Periodic Restock', color: '#F6BEBA' },
 ] as const;
 
 export const TIMING_SPECTRUM_ORDER: string[] = TIMING_BUCKETS.map((b) => b.label);
@@ -737,42 +737,42 @@ const DIMENSION_META: Record<
     section: 'objects',
     label: 'Objects [O] • Products & Brands',
     shortLabel: 'O • Objects',
-    color: '#ea580c',
+    color: '#F7D147',
     fieldKeys: ['productsPurchased', 'brandPreferences', 'foodProducts', 'supplementProducts', 'actionsToSolve', 'productPreference'],
   },
   A: {
     section: 'activities',
     label: 'Activities [A] • Routines & Habits',
     shortLabel: 'A • Activities',
-    color: '#059669',
+    color: '#96D6C7',
     fieldKeys: ['dailyRoutine', 'shoppingBehaviour', 'foodConsumptionBehaviour', 'foodPreparation', 'eatingContext'],
   },
   K: {
     section: 'knowledge',
     label: 'Knowledge [K] • Gut Awareness',
     shortLabel: 'K • Knowledge',
-    color: '#4f46e5',
+    color: '#528BCA',
     fieldKeys: ['awarenessOnGutHealth', 'awarenessLevel', 'understandingSummary'],
   },
   D: {
     section: 'demographic',
     label: 'Demographics [D] • Roles & RL',
     shortLabel: 'D • Demographics',
-    color: '#0284c7',
+    color: '#7C8CE0',
     fieldKeys: ['familyRole', 'residentialLocation', 'householdComposition', 'age', 'gender', 'educationLevel'],
   },
   T: {
     section: 'time',
     label: 'Timing [T] • Frequency & Occasions',
     shortLabel: 'T • Timing',
-    color: '#e11d48',
+    color: '#D97A75',
     fieldKeys: ['consumptionTiming', 'consumptionFrequency', 'purchaseFrequency', 'purchaseTiming', 'purchaseOccasion'],
   },
   M: {
     section: 'metadata',
     label: 'Metadata [M] • Field Venues IL',
     shortLabel: 'M • Metadata',
-    color: '#475569',
+    color: '#F6BEBA',
     fieldKeys: ['interviewLocation', 'interviewTime'],
   },
 };
@@ -863,7 +863,7 @@ export const computeExecutiveSignalOverview = (
 // 2. Objects [O] & Brands (Row 2 — 6 Cols)
 // ============================================================================
 
-const BRAND_PALETTE = ['#ea580c', '#f59e0b', '#d97706', '#fb923c', '#b45309', '#c2410c', '#0ea5e9', '#10b981'];
+const BRAND_PALETTE = ['#F7D147', '#528BCA', '#96D6C7', '#D97A75', '#7C8CE0', '#F6BEBA', '#E6B81E', '#3E73AE'];
 
 export const computeObjectsBentoData = (records: InterviewRecord[]): ObjectsBentoData => {
   const decoded = records.filter((r) => Boolean(r.adkotmDecode));
@@ -880,9 +880,9 @@ export const computeObjectsBentoData = (records: InterviewRecord[]): ObjectsBent
 
   // Brand-to-Product Co-occurrence Matrix
   const productColumns = [
-    { id: 'probiotic', label: 'Probiotic', color: '#8b5cf6' },
-    { id: 'yogurt', label: 'Yogurt', color: '#0ea5e9' },
-    { id: 'supplement', label: 'Supplement', color: '#10b981' },
+    { id: 'probiotic', label: 'Probiotic', color: '#528BCA' },
+    { id: 'yogurt', label: 'Yogurt', color: '#F7D147' },
+    { id: 'supplement', label: 'Supplement', color: '#96D6C7' },
   ];
 
   const matrixMap = new Map<
@@ -1061,7 +1061,7 @@ export const computeActivitiesBentoData = (records: InterviewRecord[]): Activiti
       label: info.label,
       count: info.recordIds.size,
       pctOfStated: statedRecords > 0 ? Math.round((info.recordIds.size / statedRecords) * 100) : 0,
-      color: '#059669',
+      color: '#96D6C7',
       recordIds: Array.from(info.recordIds),
       subLabel: info.subLabel,
       fieldKey: info.fieldKey,
@@ -1121,7 +1121,7 @@ export const computeKnowledgeBentoData = (records: InterviewRecord[]): Knowledge
       label,
       count: ids.size,
       pctOfStated: statedCount > 0 ? Math.round((ids.size / statedCount) * 100) : 0,
-      color: '#4f46e5',
+      color: '#528BCA',
       recordIds: Array.from(ids),
     }))
     .sort((a, b) => b.count - a.count);
@@ -1145,10 +1145,10 @@ export const computeKnowledgeBentoData = (records: InterviewRecord[]): Knowledge
 // ============================================================================
 
 const ROLE_COLORS: Record<string, string> = {
-  Mum: '#0284c7',
-  Dad: '#0369a1',
-  Elderly: '#7c3aed',
-  Caregiver: '#0d9488',
+  Mum: '#528BCA',
+  Dad: '#7C8CE0',
+  Elderly: '#F7D147',
+  Caregiver: '#96D6C7',
 };
 
 export const computeDemographicsBentoData = (records: InterviewRecord[]): DemographicsBentoData => {
@@ -1193,7 +1193,7 @@ export const computeDemographicsBentoData = (records: InterviewRecord[]): Demogr
       label,
       count: ids.size,
       pctOfStated: roleStated > 0 ? Math.round((ids.size / roleStated) * 100) : 0,
-      color: ROLE_COLORS[label] || '#0ea5e9',
+      color: ROLE_COLORS[label] || '#7C8CE0',
       recordIds: Array.from(ids),
     }))
     .sort((a, b) => b.count - a.count);
@@ -1204,7 +1204,7 @@ export const computeDemographicsBentoData = (records: InterviewRecord[]): Demogr
       label: info.label,
       count: info.recordIds.size,
       pctOfStated: rlStated > 0 ? Math.round((info.recordIds.size / rlStated) * 100) : 0,
-      color: '#0284c7',
+      color: '#7C8CE0',
       recordIds: Array.from(info.recordIds),
     }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
@@ -1215,7 +1215,7 @@ export const computeDemographicsBentoData = (records: InterviewRecord[]): Demogr
       label,
       count: ids.size,
       pctOfStated: decoded.length > 0 ? Math.round((ids.size / decoded.length) * 100) : 0,
-      color: '#38bdf8',
+      color: '#528BCA',
       recordIds: Array.from(ids),
     }))
     .sort((a, b) => b.count - a.count);
@@ -1440,7 +1440,7 @@ export const computeEmpathySummaryData = (records: InterviewRecord[]): EmpathySu
       label,
       count: ids.size,
       pctOfStated: statedEmpathyRecords > 0 ? Math.round((ids.size / statedEmpathyRecords) * 100) : 0,
-      color: '#7c3aed',
+      color: '#528BCA',
       recordIds: Array.from(ids),
     }))
     .filter((item) => item.count > 0)
@@ -1848,7 +1848,7 @@ const buildGroupFromExtractor = (params: {
       totalPct: nullPctOfTotal,
       formulaText: `Unstated: ${unstatedCount} / ${totalRecords} total records = ${nullPctOfTotal}%`,
       totalContextText: `${unstatedCount}/${totalRecords} unstated (excluded from Valid %)`,
-      color: '#e7e5e4',
+      color: '#EAE6DF',
       contributors: nullContributors,
     });
   }
@@ -1890,7 +1890,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Products Purchased [PP]',
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#ea580c', '#f97316', '#f59e0b', '#d97706', '#fb923c', '#b45309'],
+        accentPalette: ['#F7D147', '#E6B81E', '#D97A75', '#528BCA', '#96D6C7', '#F6BEBA'],
         customCategories,
         extractTokens: (r) => {
           const raw = toCleanArray(r.adkotmDecode?.postAnalysisCodes?.PP || r.adkotmDecode?.objects?.productsPurchased);
@@ -1913,7 +1913,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Brand Preferences [PP1]',
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#0284c7', '#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#e11d48'],
+        accentPalette: ['#528BCA', '#7C8CE0', '#F7D147', '#96D6C7', '#D97A75', '#F6BEBA'],
         customCategories,
         extractTokens: (r) => {
           const raw = toCleanArray(r.adkotmDecode?.postAnalysisCodes?.PP1 || r.adkotmDecode?.objects?.brandPreferences);
@@ -1936,7 +1936,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Activities [A]',
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#059669', '#10b981', '#0d9488', '#14b8a6', '#34d399'],
+        accentPalette: ['#96D6C7', '#68C2AE', '#46B59C', '#528BCA', '#F7D147'],
         customCategories,
         extractTokens: (r) => {
           const acts = r.adkotmDecode?.activities;
@@ -1969,7 +1969,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Awareness Level [AW]',
         chartKind: 'stacked_100',
         records: decoded,
-        accentPalette: ['#10b981', '#f59e0b'],
+        accentPalette: ['#96D6C7', '#F7D147'],
         customCategories,
         includeNullSegmentInItems: true,
         extractTokens: (r) => {
@@ -1979,7 +1979,7 @@ export const computeTraceableDimensionDataset = (
             {
               label: level,
               fieldKey: 'awarenessLevel',
-              color: level === 'Aware' ? '#10b981' : '#f59e0b',
+              color: level === 'Aware' ? '#96D6C7' : '#F7D147',
               fallbackQuotes: ['awarenessOnGutHealth', 'understandingSummary'],
             },
           ];
@@ -1997,7 +1997,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Understanding Summary',
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#4f46e5', '#6366f1', '#818cf8', '#4338ca'],
+        accentPalette: ['#528BCA', '#7C8CE0', '#96D6C7', '#3E73AE'],
         customCategories,
         extractTokens: (r) => {
           const text = toCleanString(
@@ -2027,7 +2027,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Family Role [FR]',
         chartKind: 'stacked_100',
         records: decoded,
-        accentPalette: ['#0284c7', '#0369a1', '#7c3aed', '#0d9488'],
+        accentPalette: ['#528BCA', '#7C8CE0', '#F7D147', '#96D6C7'],
         customCategories,
         includeNullSegmentInItems: true,
         extractTokens: (r) => {
@@ -2037,7 +2037,7 @@ export const computeTraceableDimensionDataset = (
             {
               label: role,
               fieldKey: 'familyRole',
-              color: ROLE_COLORS[role] || '#0ea5e9',
+              color: ROLE_COLORS[role] || '#7C8CE0',
             },
           ];
         },
@@ -2054,7 +2054,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Residential Location [RL]',
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#0284c7', '#0ea5e9', '#38bdf8', '#0369a1'],
+        accentPalette: ['#7C8CE0', '#528BCA', '#96D6C7', '#F6BEBA'],
         customCategories,
         infoTooltipTitle: 'Separated Qualitative Architecture: RL vs IL',
         infoTooltipBody:
@@ -2075,7 +2075,7 @@ export const computeTraceableDimensionDataset = (
       fieldLabel: 'Timing & Frequency [T]',
       chartKind: 'horizontal_bar',
       records: decoded,
-      accentPalette: ['#be123c', '#e11d48', '#f43f5e', '#fb7185', '#fda4af'],
+      accentPalette: ['#B85D58', '#D97A75', '#E38D88', '#EDA5A0', '#F6BEBA'],
       customCategories,
       extractTokens: (r) => {
         const t = r.adkotmDecode?.time;
@@ -2113,7 +2113,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: 'Interview Location [IL]',
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#334155', '#475569', '#64748b', '#0f172a'],
+        accentPalette: ['#F6BEBA', '#E39A94', '#528BCA', '#96D6C7'],
         customCategories,
         infoTooltipTitle: 'Separated Qualitative Architecture: IL vs RL',
         infoTooltipBody:
@@ -2141,7 +2141,7 @@ export const computeTraceableDimensionDataset = (
         fieldLabel: param.shortCode ? `${param.name} [${param.shortCode}]` : param.name,
         chartKind: 'horizontal_bar',
         records: decoded,
-        accentPalette: ['#d97706', '#f59e0b', '#b45309', '#78350f'],
+        accentPalette: ['#F7D147', '#96D6C7', '#528BCA', '#D97A75'],
         customCategories,
         extractTokens: (r) => {
           const customVal =
@@ -2317,7 +2317,7 @@ export const computeUnifiedObjectsChartData = (
         totalPct,
         formulaText: `Count: ${count} / ${statedCount} stated record${statedCount === 1 ? '' : 's'} = ${validPct}%`,
         totalContextText: `${count}/${totalRecords} total records · ${unstatedCount} unstated`,
-        color: entry.objectKind === 'brand' ? '#ea580c' : '#f59e0b',
+        color: entry.objectKind === 'brand' ? '#F7D147' : '#E6B81E',
         contributors,
         objectKind: entry.objectKind,
       };
@@ -2432,7 +2432,7 @@ export const computeActivityCooccurrenceMatrix = (
         totalPct,
         formulaText: `Count: ${count} / ${statedRecordCount} stated record${statedRecordCount === 1 ? '' : 's'} = ${validPct}%`,
         totalContextText: `${count}/${totalRecords} total records · ${unstatedCount} unstated`,
-        color: '#059669',
+        color: '#96D6C7',
         contributors,
       },
     };
@@ -2506,7 +2506,7 @@ export const computeActivityCooccurrenceMatrix = (
               ? `${count} / ${statedRecordCount} stated A records = ${validPct}%`
               : `Co-occurrence: ${count} / ${totalRecords} interviews (${pctOfTotal}%)`,
           totalContextText: `${count}/${totalRecords} interviews share both routines`,
-          color: '#059669',
+          color: '#96D6C7',
           contributors,
         },
       };

@@ -41,16 +41,16 @@ interface AnalysisChartProps {
 }
 
 const PALETTE = [
-  '#f59e0b', // amber-500
-  '#3b82f6', // blue-500
-  '#10b981', // emerald-500
-  '#8b5cf6', // violet-500
-  '#f43f5e', // rose-500
-  '#06b6d4', // cyan-500
-  '#f97316', // orange-500
-  '#6366f1', // indigo-500
-  '#14b8a6', // teal-500
-  '#ec4899', // pink-500
+  '#F7D147', // Sunburst Yellow
+  '#528BCA', // Cornflower Blue
+  '#96D6C7', // Mint Teal
+  '#D97A75', // Warm Rose
+  '#7C8CE0', // Periwinkle Blue
+  '#F6BEBA', // Soft Blush
+  '#2B7A67', // Mint Teal Deep
+  '#E39A94', // Soft Blush Deep
+  '#D4AD1F', // Sunburst Ochre
+  '#3A71B0', // Cornflower Deep
 ];
 
 export const AnalysisChart: React.FC<AnalysisChartProps> = ({
@@ -145,13 +145,13 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
     );
   };
 
-  // Assign colors: All Unstated / Null strictly use consistent grey (#94a3b8)
+  // Assign colors: All Unstated / Null strictly use consistent warm grey (#D6D0C6)
   let paletteIdx = 0;
   const coloredData: (NormalizedChartItem & { color: string })[] = validData.map((item) => {
     if (isUnstatedOrNull(item.label)) {
       return {
         ...item,
-        color: '#94a3b8', // Consistent slate-400 grey
+        color: '#D6D0C6',
       };
     }
     const color = item.color || PALETTE[paletteIdx % PALETTE.length];
@@ -163,36 +163,36 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
+    <div className="bg-white rounded-3xl border border-[#EAE6DF] p-5 shadow-studio hover:-translate-y-0.5 transition-all flex flex-col justify-between">
       {/* Header */}
       <div>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               {code && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                <span className="px-2.5 py-0.5 rounded-full text-[13px] font-mono font-bold bg-[#FEFBEB] text-[#6B5306] border border-[#F7D147]/60">
                   {code}
                 </span>
               )}
-              <h3 className="text-sm font-bold text-stone-900 truncate">{title}</h3>
+              <h3 className="font-heading text-base sm:text-lg font-bold text-[#292524] tracking-[-0.02em] truncate">{title}</h3>
             </div>
             {(subtitle || description) && (
-              <p className="text-xs text-stone-500 mt-1 line-clamp-1">{subtitle || description}</p>
+              <p className="text-[13px] sm:text-sm leading-[1.65] text-[#57534E] mt-1 line-clamp-1">{subtitle || description}</p>
             )}
           </div>
 
           {/* Actions: Toggle Pie/Bar + Export Chart */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Toggle Pie / Bar */}
-            <div className="flex items-center bg-stone-100 p-0.5 rounded-lg border border-stone-200">
+            <div className="flex items-center bg-[#F7F5F0] p-0.5 rounded-full border border-[#EAE6DF]">
               <button
                 type="button"
                 onClick={() => setChartType('pie')}
                 title="View as Pie / Donut Chart"
-                className={`p-1 rounded-md text-xs transition-all cursor-pointer ${
+                className={`p-1.5 rounded-full text-[13px] transition-all cursor-pointer ${
                   chartType === 'pie'
-                    ? 'bg-white text-stone-900 shadow-2xs font-semibold'
-                    : 'text-stone-500 hover:text-stone-800'
+                    ? 'bg-[#292524] text-white font-semibold'
+                    : 'text-[#78716C] hover:text-[#292524]'
                 }`}
               >
                 <PieIcon className="w-3.5 h-3.5" />
@@ -201,10 +201,10 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
                 type="button"
                 onClick={() => setChartType('bar')}
                 title="View as Bar Chart"
-                className={`p-1 rounded-md text-xs transition-all cursor-pointer ${
+                className={`p-1.5 rounded-full text-[13px] transition-all cursor-pointer ${
                   chartType === 'bar'
-                    ? 'bg-white text-stone-900 shadow-2xs font-semibold'
-                    : 'text-stone-500 hover:text-stone-800'
+                    ? 'bg-[#292524] text-white font-semibold'
+                    : 'text-[#78716C] hover:text-[#292524]'
                 }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
@@ -217,9 +217,9 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
                 type="button"
                 onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
                 title="Export this Chart as PNG, SVG, or copy to clipboard"
-                className="p-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 shadow-2xs cursor-pointer transition-all flex items-center gap-1 text-[11px] font-semibold"
+                className="px-3 py-1.5 rounded-full border border-[#EAE6DF] bg-[#F7F5F0] hover:bg-[#EAE6DF]/60 text-[#292524] cursor-pointer transition-all flex items-center gap-1.5 text-[13px] font-semibold"
               >
-                <Download className="w-3.5 h-3.5 text-stone-600" />
+                <Download className="w-3.5 h-3.5 text-[#57534E]" />
                 <span className="hidden sm:inline">Export</span>
               </button>
 
@@ -229,37 +229,37 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
                     className="fixed inset-0 z-20"
                     onClick={() => setIsExportMenuOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-xl shadow-xl border border-stone-200 p-1.5 z-30 space-y-1 animate-in fade-in">
+                  <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-2xl shadow-studio border border-[#EAE6DF] p-1.5 z-30 space-y-1">
                     <button
                       type="button"
                       disabled={isExporting}
                       onClick={handleExportPng}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-50 text-stone-800 flex items-center gap-2 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[13px] font-semibold hover:bg-[#FEFBEB] text-[#292524] flex items-center gap-2 cursor-pointer transition-colors"
                     >
-                      <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+                      <ImageIcon className="w-4 h-4 text-[#D4AD1F]" />
                       <span>{isExporting ? 'Exporting...' : 'Export PNG Image'}</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleExportSvg}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-50 text-stone-800 flex items-center gap-2 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[13px] font-semibold hover:bg-[#F2F7FC] text-[#292524] flex items-center gap-2 cursor-pointer transition-colors"
                     >
-                      <FileDown className="w-3.5 h-3.5 text-indigo-600" />
+                      <FileDown className="w-4 h-4 text-[#528BCA]" />
                       <span>Export Vector (SVG)</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleCopyClipboard}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-50 text-stone-800 flex items-center gap-2 cursor-pointer transition-colors border-t border-stone-100 pt-1.5"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[13px] font-semibold hover:bg-[#F2FBF8] text-[#292524] flex items-center gap-2 cursor-pointer transition-colors border-t border-[#EAE6DF] pt-2"
                     >
                       {copyFeedback ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700 font-bold">Copied to Clipboard!</span>
+                          <Check className="w-4 h-4 text-[#2B7A67]" />
+                          <span className="text-[#1E4D42] font-bold">Copied to Clipboard!</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-emerald-600" />
+                          <Copy className="w-4 h-4 text-[#2B7A67]" />
                           <span>Copy Image</span>
                         </>
                       )}
@@ -271,8 +271,8 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-stone-400 mt-2 pb-2 border-b border-stone-100">
-          <span>Total analyzed: <strong className="text-stone-700 font-mono">{totalCount}</strong></span>
+        <div className="flex items-center justify-between text-[13px] text-[#78716C] mt-2.5 pb-2 border-b border-[#EAE6DF]">
+          <span>Total analyzed: <strong className="text-[#292524] font-mono tabular-nums">{totalCount}</strong></span>
           {totalRecords && totalRecords > totalCount && (
             <span className="italic">{totalRecords - totalCount} unstated (null)</span>
           )}
@@ -283,8 +283,8 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
       <div className="my-4 min-h-[220px] flex items-center justify-center">
         {coloredData.length === 0 ? (
           <div className="text-center py-8">
-            <HelpCircle className="w-8 h-8 text-stone-300 mx-auto mb-1.5" />
-            <p className="text-xs text-stone-400 italic">No empirical data decoded yet (null)</p>
+            <HelpCircle className="w-8 h-8 text-[#D6D0C6] mx-auto mb-2" />
+            <p className="text-base leading-[1.65] text-[#78716C]">No empirical data decoded yet (null)</p>
           </div>
         ) : chartType === 'pie' ? (
           <DonutSvgChart
@@ -304,7 +304,7 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
       </div>
 
       {/* Interactive Legend / Breakdown List */}
-      <div className="space-y-1.5 pt-3 border-t border-stone-100 max-h-40 overflow-y-auto pr-1">
+      <div className="space-y-1.5 pt-3 border-t border-[#EAE6DF] max-h-40 overflow-y-auto pr-1">
         {coloredData.map((item, idx) => {
           const isHovered = hoveredIndex === idx;
           const percent = totalCount > 0 ? Math.round((item.count / totalCount) * 100) : 0;
@@ -313,8 +313,8 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
               key={item.label}
               onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
-              className={`flex items-center justify-between text-xs px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-                isHovered ? 'bg-stone-100/90 font-medium' : 'hover:bg-stone-50'
+              className={`flex items-center justify-between text-[13px] sm:text-sm px-2.5 py-1 rounded-xl transition-colors cursor-pointer ${
+                isHovered ? 'bg-[#F7F5F0] font-medium' : 'hover:bg-[#FDFCF8]'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -322,13 +322,13 @@ export const AnalysisChart: React.FC<AnalysisChartProps> = ({
                   className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-stone-700 truncate flex-1 pr-2" title={item.label}>
+                <span className="text-[#57534E] truncate flex-1 pr-2" title={item.label}>
                   {item.label}
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-mono text-stone-900 font-bold">{item.count}</span>
-                <span className="text-[11px] text-stone-400 font-mono w-9 text-right">
+                <span className="font-mono tabular-nums text-[#292524] font-bold">{item.count}</span>
+                <span className="text-[13px] text-[#78716C] font-mono tabular-nums w-10 text-right">
                   {percent}%
                 </span>
               </div>
@@ -369,8 +369,8 @@ const DonutSvgChart: React.FC<{
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-          <span className="text-base font-bold font-mono text-stone-900">{single.count}</span>
-          <span className="text-[10px] text-stone-500 uppercase font-bold">100%</span>
+          <span className="text-lg font-bold font-mono tabular-nums text-[#292524]">{single.count}</span>
+          <span className="text-[13px] text-[#78716C] uppercase font-bold tabular-nums">100%</span>
         </div>
       </div>
     );
@@ -450,20 +450,20 @@ const DonutSvgChart: React.FC<{
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
         {activeSlice ? (
           <>
-            <span className="text-sm font-bold font-mono text-stone-900 leading-tight">
+            <span className="text-base font-bold font-mono tabular-nums text-[#292524] leading-tight">
               {activeSlice.count}
             </span>
-            <span className="text-[11px] font-bold text-amber-600 font-mono">
+            <span className="text-[13px] font-bold text-[#528BCA] font-mono tabular-nums">
               {activeSlice.percent}%
             </span>
-            <span className="text-[10px] text-stone-500 truncate max-w-[80px]">
+            <span className="text-[13px] text-[#78716C] truncate max-w-[84px]">
               {activeSlice.label}
             </span>
           </>
         ) : (
           <>
-            <span className="text-base font-bold font-mono text-stone-900">{total}</span>
-            <span className="text-[10px] text-stone-400 uppercase tracking-wider font-semibold">
+            <span className="text-lg font-bold font-mono tabular-nums text-[#292524]">{total}</span>
+            <span className="text-[13px] text-[#78716C] uppercase tracking-wider font-semibold">
               Total
             </span>
           </>
@@ -498,17 +498,17 @@ const BarSvgChart: React.FC<{
               hoveredIndex === null || isHovered ? 'opacity-100' : 'opacity-60'
             }`}
           >
-            <div className="flex items-center justify-between text-xs gap-2">
-              <span className="font-medium text-stone-700 truncate flex-1 min-w-0" title={item.label}>
+            <div className="flex items-center justify-between text-[13px] sm:text-sm gap-2">
+              <span className="font-medium text-[#292524] truncate flex-1 min-w-0" title={item.label}>
                 {item.label}
               </span>
-              <div className="flex items-center gap-1.5 shrink-0 font-mono">
-                <span className="font-bold text-stone-900">{item.count}</span>
-                <span className="text-[10px] text-stone-400">({sharePercent}%)</span>
+              <div className="flex items-center gap-1.5 shrink-0 font-mono tabular-nums">
+                <span className="font-bold text-[#292524]">{item.count}</span>
+                <span className="text-[13px] text-[#78716C]">({sharePercent}%)</span>
               </div>
             </div>
 
-            <div className="w-full h-3 bg-stone-100 rounded-full overflow-hidden p-0.5">
+            <div className="w-full h-3 bg-[#F7F5F0] rounded-full overflow-hidden p-0.5">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{

@@ -37,56 +37,56 @@ export const ADKOTM_DIMENSION_STYLES: Record<
   O: {
     key: 'O',
     name: 'Object',
-    badgeClass: 'bg-orange-100 text-orange-800 border-orange-200',
-    highlightClass: 'bg-orange-100/80 text-orange-950 border-b-2 border-orange-400/70',
-    activeHighlightClass: 'bg-orange-200 text-orange-950 ring-2 ring-orange-500 border-b-2 border-orange-600',
-    borderAccentClass: 'border-orange-300',
-    dotClass: 'bg-orange-500',
+    badgeClass: 'bg-[#FEFBEB] text-[#6B5306] border-[#F7D147]',
+    highlightClass: 'bg-[#FEFBEB] text-[#292524] border-b-2 border-[#F7D147]',
+    activeHighlightClass: 'bg-[#FEF4C7] text-[#292524] ring-2 ring-[#F7D147] border-b-2 border-[#D4AD1F]',
+    borderAccentClass: 'border-[#F7D147]',
+    dotClass: 'bg-[#F7D147]',
   },
   A: {
     key: 'A',
     name: 'Activity',
-    badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    highlightClass: 'bg-emerald-100/80 text-emerald-950 border-b-2 border-emerald-400/70',
-    activeHighlightClass: 'bg-emerald-200 text-emerald-950 ring-2 ring-emerald-500 border-b-2 border-emerald-600',
-    borderAccentClass: 'border-emerald-300',
-    dotClass: 'bg-emerald-500',
+    badgeClass: 'bg-[#F2FBF8] text-[#1E4D42] border-[#96D6C7]',
+    highlightClass: 'bg-[#F2FBF8] text-[#292524] border-b-2 border-[#96D6C7]',
+    activeHighlightClass: 'bg-[#DDF5EE] text-[#1E4D42] ring-2 ring-[#96D6C7] border-b-2 border-[#5AB8A3]',
+    borderAccentClass: 'border-[#96D6C7]',
+    dotClass: 'bg-[#96D6C7]',
   },
   K: {
     key: 'K',
     name: 'Knowledge',
-    badgeClass: 'bg-purple-100 text-purple-800 border-purple-200',
-    highlightClass: 'bg-purple-100/80 text-purple-950 border-b-2 border-purple-400/70',
-    activeHighlightClass: 'bg-purple-200 text-purple-950 ring-2 ring-purple-500 border-b-2 border-purple-600',
-    borderAccentClass: 'border-purple-300',
-    dotClass: 'bg-purple-500',
+    badgeClass: 'bg-[#F2F7FC] text-[#234B78] border-[#528BCA]/50',
+    highlightClass: 'bg-[#F2F7FC] text-[#292524] border-b-2 border-[#528BCA]/75',
+    activeHighlightClass: 'bg-[#E1EEF9] text-[#234B78] ring-2 ring-[#528BCA] border-b-2 border-[#528BCA]',
+    borderAccentClass: 'border-[#528BCA]/60',
+    dotClass: 'bg-[#528BCA]',
   },
   D: {
     key: 'D',
     name: 'Demographic',
-    badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
-    highlightClass: 'bg-blue-100/80 text-blue-950 border-b-2 border-blue-400/70',
-    activeHighlightClass: 'bg-blue-200 text-blue-950 ring-2 ring-blue-500 border-b-2 border-blue-600',
-    borderAccentClass: 'border-blue-300',
-    dotClass: 'bg-blue-500',
+    badgeClass: 'bg-[#F3F5FD] text-[#33418A] border-[#7C8CE0]/55',
+    highlightClass: 'bg-[#F3F5FD] text-[#292524] border-b-2 border-[#7C8CE0]/80',
+    activeHighlightClass: 'bg-[#E4E8FA] text-[#33418A] ring-2 ring-[#7C8CE0] border-b-2 border-[#7C8CE0]',
+    borderAccentClass: 'border-[#7C8CE0]/60',
+    dotClass: 'bg-[#7C8CE0]',
   },
   T: {
     key: 'T',
     name: 'Timing',
-    badgeClass: 'bg-rose-100 text-rose-800 border-rose-200',
-    highlightClass: 'bg-rose-100/80 text-rose-950 border-b-2 border-rose-400/70',
-    activeHighlightClass: 'bg-rose-200 text-rose-950 ring-2 ring-rose-500 border-b-2 border-rose-600',
-    borderAccentClass: 'border-rose-300',
-    dotClass: 'bg-rose-500',
+    badgeClass: 'bg-[#FBEAE9] text-[#7A3A36] border-[#D97A75]/55',
+    highlightClass: 'bg-[#FBEAE9] text-[#292524] border-b-2 border-[#D97A75]/85',
+    activeHighlightClass: 'bg-[#F5D6D4] text-[#7A3A36] ring-2 ring-[#D97A75] border-b-2 border-[#D97A75]',
+    borderAccentClass: 'border-[#D97A75]/60',
+    dotClass: 'bg-[#D97A75]',
   },
   M: {
     key: 'M',
     name: 'Metadata',
-    badgeClass: 'bg-stone-200 text-stone-800 border-stone-300',
-    highlightClass: 'bg-amber-100/75 text-stone-900 border-b-2 border-amber-400/70',
-    activeHighlightClass: 'bg-amber-200 text-stone-950 ring-2 ring-amber-500 border-b-2 border-amber-600',
-    borderAccentClass: 'border-stone-300',
-    dotClass: 'bg-stone-500',
+    badgeClass: 'bg-[#FDF4F3] text-[#7A3A36] border-[#F6BEBA]',
+    highlightClass: 'bg-[#FDF4F3] text-[#292524] border-b-2 border-[#F6BEBA]',
+    activeHighlightClass: 'bg-[#FAE5E3] text-[#7A3A36] ring-2 ring-[#F6BEBA] border-b-2 border-[#E39A94]',
+    borderAccentClass: 'border-[#F6BEBA]',
+    dotClass: 'bg-[#F6BEBA]',
   },
 };
 
@@ -916,7 +916,7 @@ export function buildTranscriptHighlightSegments(
       cursor = cand.end;
     } else if (nonOverlapping.length > 0) {
       const prev = nonOverlapping[nonOverlapping.length - 1];
-      if (cand.start >= prev.start && cand.end <= prev.end && !prev.fieldKeys.includes(cand.fieldKey)) {
+      if (cand.start < prev.end && !prev.fieldKeys.includes(cand.fieldKey)) {
         prev.fieldKeys.push(cand.fieldKey);
       }
     }
@@ -953,6 +953,245 @@ export function buildTranscriptHighlightSegments(
   }
 
   return segments;
+}
+
+export interface CroppingTranscriptSegment extends TranscriptHighlightSegment {
+  isActiveCrop?: boolean;
+}
+
+interface WordTokenSpan {
+  start: number;
+  end: number;
+}
+
+function extractWordTokens(transcript: string): WordTokenSpan[] {
+  const tokens: WordTokenSpan[] = [];
+  const regex = /\S+/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(transcript)) !== null) {
+    tokens.push({ start: match.index, end: match.index + match[0].length });
+  }
+  return tokens;
+}
+
+/**
+ * Resolves exact character offsets [start, end] for a field's evidence_quote in the transcript.
+ */
+export function resolveFieldSpanOffsets(
+  transcript: string,
+  fieldStates: Record<string, ADKOTMFieldItem> | undefined,
+  fieldKey: string
+): GroundedQuoteMatch | null {
+  if (!transcript || !fieldStates) return null;
+  const item = fieldStates[fieldKey];
+  if (!item || item.status === 'REJECTED' || !sanitizeCodeValue(item.code)) return null;
+  if (item.source === 'filename_metadata' || item.source === 'session_metadata') return null;
+  return verifyEvidenceQuote(transcript, item.evidence_quote);
+}
+
+/**
+ * Snaps a raw character offset to a clean word boundary when dragging start/end crop handles,
+ * guaranteeing a non-empty valid [start, end] span.
+ */
+export function snapCropBoundaryToWord(
+  transcript: string,
+  rawOffset: number,
+  edge: 'start' | 'end',
+  currentStart: number,
+  currentEnd: number
+): number {
+  const tokens = extractWordTokens(transcript);
+  if (tokens.length === 0) {
+    return Math.max(0, Math.min(transcript.length, rawOffset));
+  }
+
+  const clamped = Math.max(0, Math.min(transcript.length, rawOffset));
+
+  if (edge === 'start') {
+    const candidateToken =
+      tokens.find((t) => t.end > clamped && t.start < currentEnd) ||
+      [...tokens].reverse().find((t) => t.start < currentEnd) ||
+      tokens[0];
+    return Math.min(candidateToken.start, Math.max(0, currentEnd - 1));
+  }
+
+  const validTokens = tokens.filter((t) => t.end > currentStart);
+  if (validTokens.length === 0) return Math.min(transcript.length, Math.max(currentStart + 1, clamped));
+
+  const candidateToken =
+    [...validTokens].reverse().find((t) => t.start < clamped) || validTokens[0];
+  return Math.max(candidateToken.end, Math.min(transcript.length, currentStart + 1));
+}
+
+/**
+ * Nudges the start or end boundary of a cropped span by 1 word left (-1) or right (+1).
+ */
+export function nudgeSpanBoundary(
+  transcript: string,
+  start: number,
+  end: number,
+  edge: 'start' | 'end',
+  deltaWords: -1 | 1
+): { start: number; end: number; text: string } {
+  const tokens = extractWordTokens(transcript);
+  if (tokens.length === 0) {
+    return { start, end, text: transcript.slice(start, end) };
+  }
+
+  if (edge === 'start') {
+    let idx = tokens.findIndex((t) => t.end > start);
+    if (idx === -1) idx = tokens.length - 1;
+    const nextIdx = Math.max(0, Math.min(tokens.length - 1, idx + deltaWords));
+    const candidateStart = tokens[nextIdx].start;
+    const finalStart = candidateStart < end ? candidateStart : start;
+    return {
+      start: finalStart,
+      end,
+      text: transcript.slice(finalStart, end),
+    };
+  }
+
+  let idx = -1;
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    if (tokens[i].start < end) {
+      idx = i;
+      break;
+    }
+  }
+  if (idx === -1) idx = 0;
+  const nextIdx = Math.max(0, Math.min(tokens.length - 1, idx + deltaWords));
+  const candidateEnd = tokens[nextIdx].end;
+  const finalEnd = candidateEnd > start ? candidateEnd : end;
+  return {
+    start,
+    end: finalEnd,
+    text: transcript.slice(start, finalEnd),
+  };
+}
+
+/**
+ * Builds transcript segments with an active cropping candidate span overlaid cleanly
+ * on top of other non-active coded highlights, preserving exact contiguous offsets.
+ */
+export function buildTranscriptCroppingSegments(
+  transcript: string,
+  fieldStates: Record<string, ADKOTMFieldItem> | undefined,
+  activeCropFieldKey: string,
+  cropStart: number,
+  cropEnd: number
+): CroppingTranscriptSegment[] {
+  if (!transcript) return [];
+  const safeStart = Math.max(0, Math.min(cropStart, transcript.length));
+  const safeEnd = Math.max(safeStart, Math.min(cropEnd, transcript.length));
+
+  const otherStates: Record<string, ADKOTMFieldItem> = {};
+  if (fieldStates) {
+    for (const [k, v] of Object.entries(fieldStates)) {
+      if (k !== activeCropFieldKey) {
+        otherStates[k] = v;
+      }
+    }
+  }
+
+  const baseSegments = buildTranscriptHighlightSegments(transcript, otherStates);
+  const param = ADKOTM_PARAM_MAP.get(activeCropFieldKey);
+  const result: CroppingTranscriptSegment[] = [];
+  let insertedCrop = false;
+
+  for (const seg of baseSegments) {
+    if (seg.end <= safeStart || seg.start >= safeEnd) {
+      if (!insertedCrop && seg.start >= safeEnd) {
+        result.push({
+          text: transcript.slice(safeStart, safeEnd),
+          start: safeStart,
+          end: safeEnd,
+          isActiveCrop: true,
+          fieldKey: activeCropFieldKey,
+          fieldKeys: [activeCropFieldKey],
+          dimension: param?.dimension || 'O',
+          label: param?.label || activeCropFieldKey,
+        });
+        insertedCrop = true;
+      }
+      result.push(seg);
+      continue;
+    }
+
+    if (seg.start < safeStart) {
+      result.push({
+        ...seg,
+        text: transcript.slice(seg.start, safeStart),
+        end: safeStart,
+      });
+    }
+
+    if (!insertedCrop) {
+      result.push({
+        text: transcript.slice(safeStart, safeEnd),
+        start: safeStart,
+        end: safeEnd,
+        isActiveCrop: true,
+        fieldKey: activeCropFieldKey,
+        fieldKeys: [activeCropFieldKey],
+        dimension: param?.dimension || 'O',
+        label: param?.label || activeCropFieldKey,
+      });
+      insertedCrop = true;
+    }
+
+    if (seg.end > safeEnd) {
+      result.push({
+        ...seg,
+        text: transcript.slice(safeEnd, seg.end),
+        start: safeEnd,
+      });
+    }
+  }
+
+  if (!insertedCrop) {
+    result.push({
+      text: transcript.slice(safeStart, safeEnd),
+      start: safeStart,
+      end: safeEnd,
+      isActiveCrop: true,
+      fieldKey: activeCropFieldKey,
+      fieldKeys: [activeCropFieldKey],
+      dimension: param?.dimension || 'O',
+      label: param?.label || activeCropFieldKey,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Updates an ADKOTMFieldItem after span cropping or inline quote/code editing,
+ * preserving existing Accepted/Manual status and promoting Staged drafts.
+ */
+export function buildUpdatedFieldItemFromEdit(
+  prev: ADKOTMFieldItem | undefined,
+  updates: {
+    code: string;
+    evidence_quote: string | null;
+    reasoning?: string | null;
+    source?: ADKOTMFieldItem['source'];
+  }
+): ADKOTMFieldItem {
+  const nextStatus: ADKOTMFieldStatus =
+    prev?.status === 'ACCEPTED'
+      ? 'ACCEPTED'
+      : prev?.status === 'MANUAL'
+      ? 'MANUAL'
+      : 'MANUAL';
+
+  return {
+    code: updates.code.trim(),
+    evidence_quote: updates.evidence_quote && updates.evidence_quote.trim() ? updates.evidence_quote.trim() : null,
+    confidence: 'HIGH',
+    status: nextStatus,
+    reasoning: updates.reasoning ?? prev?.reasoning ?? 'Edited by researcher',
+    source: updates.source ?? (prev?.source && prev.source !== 'filename_metadata' && prev.source !== 'session_metadata' ? prev.source : 'manual'),
+  };
 }
 
 interface SignalRule {

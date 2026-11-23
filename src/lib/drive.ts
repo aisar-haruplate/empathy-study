@@ -1,30 +1,104 @@
 import { DriveFileItem, SharedDriveItem } from '../types';
 
+const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+
+export interface GoogleDriveConfigStatus {
+  clientId: string;
+  apiKey: string;
+  hasCustomOAuthClient: boolean;
+  hasCustomApiKey: boolean;
+}
+
+/**
+ * Inspect optional client-side Google Drive/OAuth environment variables.
+ * (Primary Drive access uses the OAuth token from Firebase Google Sign-In.)
+ */
+export function getGoogleDriveConfigStatus(): GoogleDriveConfigStatus {
+  const clientId = (env.VITE_GOOGLE_CLIENT_ID || '').trim();
+  const apiKey = (env.VITE_GOOGLE_API_KEY || '').trim();
+  return {
+    clientId,
+    apiKey,
+    hasCustomOAuthClient: clientId.length > 0,
+    hasCustomApiKey: apiKey.length > 0,
+  };
+}
+
+function requireAccessToken(accessToken: string | null | undefined): string {
+  const token = (accessToken || '').trim();
+  if (!token) {
+    throw new Error(
+      'Google Drive access token is missing or expired. Please click "Reconnect Google Account" to sign in again.'
+    );
+  }
+  return token;
+}
+
+function formatDriveApiError(status: number, errorData: any, fallback: string): string {
+  const apiMessage: string = errorData?.error?.message || '';
+  const reason: string = errorData?.error?.errors?.[0]?.reason || '';
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'this origin';
+
+  if (status === 401 || reason === 'authError') {
+    return 'Your Google Drive session has expired. Click "Reconnect Google Account" to sign in again.';
+  }
+
+  if (
+    status === 403 &&
+    (reason === 'accessNotConfigured' ||
+      apiMessage.includes('drive.googleapis.com') ||
+      apiMessage.includes('has not been used in project') ||
+      apiMessage.includes('is disabled'))
+  ) {
+    return (
+      apiMessage ||
+      'Google Drive API (drive.googleapis.com) is not enabled for this Google Cloud project.'
+    );
+  }
+
+  if (status === 403 && (reason === 'insufficientPermissions' || reason === 'forbidden')) {
+    return `Google Drive access was denied (${apiMessage || 'insufficient permissions'}). Verify OAuth consent, Authorized JavaScript origins (${origin}), and Drive read permissions, then reconnect your Google account.`;
+  }
+
+  if (status === 404) {
+    return 'The requested Google Drive file or folder could not be found or is no longer shared with your account.';
+  }
+
+  return apiMessage || `${fallback} (HTTP ${status})`;
+}
+
 /**
  * List all Shared Drives (Team Drives) that the user has access to
  */
 export async function listSharedDrives(accessToken: string): Promise<SharedDriveItem[]> {
   try {
+    const token = requireAccessToken(accessToken);
     const url = new URL('https://www.googleapis.com/drive/v3/drives');
     url.searchParams.set('pageSize', '100');
     url.searchParams.set('fields', 'drives(id, name, colorRgb)');
 
     const res = await fetch(url.toString(), {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      console.warn('Error listing shared drives:', errorData);
+      console.warn(
+        '[Google Drive] Error listing shared drives:',
+        formatDriveApiError(res.status, errorData, 'Failed to list Shared Drives')
+      );
       return [];
     }
 
     const data = await res.json();
     return data.drives || [];
   } catch (error) {
-    console.error('Error listing shared drives:', error);
+    console.warn('[Google Drive] Error listing shared drives:', error);
     return [];
   }
 }
@@ -39,6 +113,7 @@ export async function listDriveFolderContents(
   isSharedWithMe: boolean = false
 ): Promise<{ folders: DriveFileItem[]; files: DriveFileItem[] }> {
   try {
+    const token = requireAccessToken(accessToken);
     let q = `trashed = false`;
 
     if (searchQuery && searchQuery.trim()) {
@@ -70,14 +145,14 @@ export async function listDriveFolderContents(
 
     const res = await fetch(url.toString(), {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(
-        errorData.error?.message || `Failed to fetch Google Drive files (HTTP ${res.status})`
+        formatDriveApiError(res.status, errorData, 'Failed to fetch Google Drive files')
       );
     }
 
@@ -97,8 +172,15 @@ export async function listDriveFolderContents(
     const files = allItems.filter((i) => !i.isFolder);
 
     return { folders, files };
-  } catch (error) {
-    console.warn('Error listing Drive contents:', error);
+  } catch (error: unknown) {
+    if (error instanceof TypeError && /fetch/i.test(error.message)) {
+      const networkErr = new Error(
+        'Unable to reach Google Drive API. Check your internet connection and verify Authorized JavaScript origins in Google Cloud Console.'
+      );
+      console.warn('[Google Drive] Network error listing Drive contents:', error);
+      throw networkErr;
+    }
+    console.warn('[Google Drive] Error listing Drive contents:', error);
     throw error;
   }
 }
@@ -209,17 +291,18 @@ export async function downloadDriveFile(
   audioBase64?: string;
   blob?: Blob;
 }> {
+  const token = requireAccessToken(accessToken);
   const { targetId, targetMimeType } = await resolveDriveFileTarget(
     file.id,
     file.mimeType || '',
     file.shortcutDetails,
-    accessToken
+    token
   );
 
   // All Google Workspace / Docs Editors files (Docs, Sheets, Slides, Shortcuts to them, etc.)
   // must be exported rather than downloaded with ?alt=media
   if (targetMimeType.startsWith('application/vnd.google-apps.')) {
-    return exportGoogleWorkspaceFile(targetId, targetMimeType, file.name, accessToken);
+    return exportGoogleWorkspaceFile(targetId, targetMimeType, file.name, token);
   }
 
   const isAudio =
@@ -232,11 +315,17 @@ export async function downloadDriveFile(
   // Download binary media (with supportsAllDrives)
   const mediaUrl = `https://www.googleapis.com/drive/v3/files/${targetId}?alt=media&supportsAllDrives=true`;
   const res = await fetch(mediaUrl, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
     const rawText = await res.text().catch(() => '');
+    let parsedError: any = {};
+    try {
+      parsedError = rawText ? JSON.parse(rawText) : {};
+    } catch {
+      parsedError = {};
+    }
     // Fallback: if Drive reports this is actually a Docs Editors file, fetch its mimeType and export it
     if (
       res.status === 403 &&
@@ -244,7 +333,7 @@ export async function downloadDriveFile(
     ) {
       const metaRes = await fetch(
         `https://www.googleapis.com/drive/v3/files/${targetId}?fields=mimeType,shortcutDetails(targetId,targetMimeType)&supportsAllDrives=true`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (metaRes.ok) {
         const meta = await metaRes.json();
@@ -252,24 +341,30 @@ export async function downloadDriveFile(
           targetId,
           meta.mimeType || 'application/vnd.google-apps.document',
           meta.shortcutDetails,
-          accessToken
+          token
         );
         return exportGoogleWorkspaceFile(
           resolved.targetId,
           resolved.targetMimeType,
           file.name,
-          accessToken
+          token
         );
       }
       return exportGoogleWorkspaceFile(
         targetId,
         'application/vnd.google-apps.document',
         file.name,
-        accessToken
+        token
       );
     }
 
-    throw new Error(`Failed to download file from Google Drive (HTTP ${res.status}): ${rawText.substring(0, 120)}`);
+    throw new Error(
+      formatDriveApiError(
+        res.status,
+        parsedError,
+        `Failed to download "${file.name}" from Google Drive`
+      )
+    );
   }
 
   const blob = await res.blob();

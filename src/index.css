@@ -1,28 +1,6 @@
 @import "tailwindcss";
-
-@layer base {
-  html,
-  body {
-    max-width: 100vw;
-    overflow-x: hidden;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
-
-  #root {
-    max-width: 100vw;
-    overflow-x: hidden;
-    width: 100%;
-    min-height: 100vh;
-  }
-}
-
-/* Utility to hide scrollbars while allowing touch/horizontal scrolling */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+@import "./styles/tokens.css";
+@import "./styles/typography.css";
+@import "./styles/grain.css";
+@import "./styles/tabs-folder.css";
+@import "./styles/highlights.css";

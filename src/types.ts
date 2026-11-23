@@ -249,6 +249,8 @@ export interface CrossAnalysisFormula {
   outputTiers: string[]; // e.g. ["High", "Medium-High", "Medium", "Low"]
   evaluationRules?: string;
   isCustom?: boolean;
+  weights?: Partial<Record<'A' | 'D' | 'K' | 'O' | 'T' | 'M', number>>;
+  tierThresholds?: number[]; // Descending cutoffs matching outputTiers (0-100 scale)
 }
 
 export interface GenericCrossAnalysisEvaluation {
@@ -259,6 +261,11 @@ export interface GenericCrossAnalysisEvaluation {
   components: Record<string, string | null>;
   justification: string | null;
   evaluatedAt?: string;
+  score?: number;
+  maxScore?: number;
+  dimensionScores?: Partial<Record<'A' | 'D' | 'K' | 'O' | 'T' | 'M', { earned: number; weight: number; stated: boolean; summary: string | null }>>;
+  breakdownText?: string;
+  isManualOverride?: boolean;
 }
 
 export interface ADKOTMDistributionSummary {
@@ -325,7 +332,10 @@ export interface InterviewRecord {
   sessionDate?: string; // extracted or inferred date e.g. "26 Oct 2026"
   sessionLocation?: string; // e.g. "Brem Mall Kepong, Publika"
 
-  // Module 2: Cleaned & Transformed Data (synced to whichever result is selected)
+  // Module 2: Translated & Cleaned Data (synced to whichever result is selected)
+  translatedTranscript?: string;
+  translatedWordCount?: number;
+  translatedAt?: string;
   cleanedTranscript?: string;
   cleanedWordCount?: number;
   removedWordsCount?: number;

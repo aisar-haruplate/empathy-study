@@ -1,0 +1,6 @@
+{
+  "summary":  "Typography, reading-scale, and button-hierarchy upgrade plan pairing Outfit headings with Inter 16px body copy (1.65 line-height, 13px minimum labels) across the Empathy Study workspace, transcripts, coding cards, empty states, and synthesis views while keeping the top header and handwritten tagline completely untouched.",
+  "updatedAt":  "2026-11-22T15:33:16.197872023Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

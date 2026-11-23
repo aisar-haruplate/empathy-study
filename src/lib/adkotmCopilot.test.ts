@@ -10,6 +10,11 @@ import {
   computeReviewProgress,
   isHumanVerifiedRecord,
   buildTranscriptHighlightSegments,
+  buildTranscriptCroppingSegments,
+  buildUpdatedFieldItemFromEdit,
+  nudgeSpanBoundary,
+  resolveFieldSpanOffsets,
+  snapCropBoundaryToWord,
   scanMissedSignals,
   proposeTaxonomyNormalizations,
   applyTaxonomyNormalizations,
@@ -244,3 +249,138 @@ test('proposeTaxonomyNormalizations and applyTaxonomyNormalizations standardize 
   assert.equal(updated[0].adkotmDecode?.postAnalysisCodes.PP, 'Probiotic Drinks');
   assert.equal(updated[0].adkotmDecode?.postAnalysisCodes.PP1, 'Vitagen, Yakult');
 });
+
+test('buildTranscriptHighlightSegments attaches fieldKeys for partially overlapping spans', () => {
+  const transcript = 'We usually buy Yakult for our child every weekend.';
+  const segments = buildTranscriptHighlightSegments(transcript, {
+    productsPurchased: {
+      code: 'Probiotic Drinks',
+      evidence_quote: 'usually buy Yakult for our child',
+      confidence: 'HIGH',
+      status: 'ACCEPTED',
+    },
+    brandPreferences: {
+      code: 'Yakult',
+      evidence_quote: 'Yakult for our child every weekend.',
+      confidence: 'HIGH',
+      status: 'STAGED',
+    },
+  });
+
+  const highlighted = segments.filter((s) => s.fieldKey);
+  assert.equal(highlighted.length, 1);
+  assert.ok(highlighted[0].fieldKeys?.includes('productsPurchased'));
+  assert.ok(highlighted[0].fieldKeys?.includes('brandPreferences'));
+});
+
+test('resolveFieldSpanOffsets, snapCropBoundaryToWord, and nudgeSpanBoundary trim spans cleanly', () => {
+  const transcript = 'She is a child. already grown up, already adult. boy.';
+  const fieldStates = {
+    householdComposition: {
+      code: 'Adult son',
+      evidence_quote: 'child. already grown up, already adult. boy.',
+      confidence: 'HIGH' as const,
+      status: 'STAGED' as const,
+      source: 'transcript' as const,
+    },
+  };
+
+  const resolved = resolveFieldSpanOffsets(transcript, fieldStates, 'householdComposition');
+  assert.ok(resolved);
+  assert.equal(resolved.matchedText, 'child. already grown up, already adult. boy.');
+
+  // Snap raw drag near "already" (start) and after "adult." (end)
+  const snappedStart = snapCropBoundaryToWord(
+    transcript,
+    transcript.indexOf('already adult.') + 2,
+    'start',
+    resolved.start,
+    resolved.end
+  );
+  assert.equal(transcript.slice(snappedStart, resolved.end), 'already adult. boy.');
+
+  // Nudge start +1w (shrink) and -1w (expand)
+  const shrunkStart = nudgeSpanBoundary(transcript, resolved.start, resolved.end, 'start', 1);
+  assert.equal(shrunkStart.text, 'already grown up, already adult. boy.');
+
+  const expandedStart = nudgeSpanBoundary(transcript, shrunkStart.start, shrunkStart.end, 'start', -1);
+  assert.equal(expandedStart.text, 'child. already grown up, already adult. boy.');
+
+  // Nudge end -1w and +1w, plus clamp check so start never exceeds end
+  const shrunkEnd = nudgeSpanBoundary(transcript, shrunkStart.start, shrunkStart.end, 'end', -1);
+  assert.equal(shrunkEnd.text, 'already grown up, already adult.');
+  assert.ok(shrunkEnd.start < shrunkEnd.end);
+});
+
+test('buildTranscriptCroppingSegments preserves contiguous transcript offsets and other highlights', () => {
+  const transcript = 'I stay in Kepong. child. already grown up, already adult. boy.';
+  const fieldStates = {
+    residentialLocation: {
+      code: 'Kepong',
+      evidence_quote: 'stay in Kepong',
+      confidence: 'HIGH' as const,
+      status: 'ACCEPTED' as const,
+    },
+    householdComposition: {
+      code: 'Adult son',
+      evidence_quote: 'child. already grown up, already adult. boy.',
+      confidence: 'HIGH' as const,
+      status: 'STAGED' as const,
+    },
+  };
+
+  const cropStart = transcript.indexOf('already adult.');
+  const cropEnd = transcript.length;
+  const segs = buildTranscriptCroppingSegments(
+    transcript,
+    fieldStates,
+    'householdComposition',
+    cropStart,
+    cropEnd
+  );
+
+  assert.equal(segs.map((s) => s.text).join(''), transcript);
+  const activeCrop = segs.find((s) => s.isActiveCrop);
+  assert.ok(activeCrop);
+  assert.equal(activeCrop.text, 'already adult. boy.');
+  assert.equal(activeCrop.fieldKey, 'householdComposition');
+  assert.ok(segs.some((s) => !s.isActiveCrop && s.fieldKey === 'residentialLocation' && s.text === 'stay in Kepong'));
+});
+
+test('buildUpdatedFieldItemFromEdit preserves ACCEPTED status and promotes STAGED drafts to MANUAL', () => {
+  const accepted = buildUpdatedFieldItemFromEdit(
+    {
+      code: 'Buy',
+      evidence_quote: 'so buy it',
+      confidence: 'HIGH',
+      status: 'ACCEPTED',
+      source: 'transcript',
+    },
+    {
+      code: 'Purchases yogurt for child',
+      evidence_quote: 'buy it',
+    }
+  );
+  assert.equal(accepted.status, 'ACCEPTED');
+  assert.equal(accepted.code, 'Purchases yogurt for child');
+  assert.equal(accepted.evidence_quote, 'buy it');
+  assert.equal(accepted.confidence, 'HIGH');
+
+  const staged = buildUpdatedFieldItemFromEdit(
+    {
+      code: 'Adult child',
+      evidence_quote: 'child. already grown up, already adult. boy.',
+      confidence: 'REVIEW_NEEDED',
+      status: 'STAGED',
+      source: 'transcript',
+    },
+    {
+      code: 'Adult son',
+      evidence_quote: 'already adult. boy.',
+    }
+  );
+  assert.equal(staged.status, 'MANUAL');
+  assert.equal(staged.confidence, 'HIGH');
+  assert.equal(staged.evidence_quote, 'already adult. boy.');
+});
+

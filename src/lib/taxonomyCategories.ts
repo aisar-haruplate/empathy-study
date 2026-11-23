@@ -18,7 +18,7 @@ export const MACRO_CATEGORIES: MacroCategoryMeta[] = [
   {
     id: 'probiotics',
     name: 'probiotics',
-    color: '#8b5cf6',
+    color: '#528BCA',
     description: 'probiotic products, supplements, yogurt, and their brands',
     keywords: [
       'probiotic', 'probiotics', 'bio gaia', 'yakult', 'vitagen', 'cultured milk',
@@ -32,7 +32,7 @@ export const MACRO_CATEGORIES: MacroCategoryMeta[] = [
   {
     id: 'fruits_vegetables',
     name: 'fruits & vegetables',
-    color: '#10b981',
+    color: '#96D6C7',
     description: 'fruits and vegetables, grouped without further breakdown',
     keywords: [
       'vegetable', 'vegetables', 'sayur', 'sayur-sayuran', 'sayuran', 'carrot',
@@ -44,7 +44,7 @@ export const MACRO_CATEGORIES: MacroCategoryMeta[] = [
   {
     id: 'grains_staples',
     name: 'grains & carbohydrates',
-    color: '#f59e0b',
+    color: '#F7D147',
     description: 'grains and carbohydrates, grouped without further breakdown',
     keywords: [
       'oat', 'oats', 'oatmeal', 'rice', 'nasi', 'pasta', 'noodle', 'noodles',

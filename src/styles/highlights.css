@@ -1,0 +1,67 @@
+/* ADKOTM dimension transcript highlight spans */
+.adkotm-highlight {
+  border-radius: 0.375rem;
+  padding: 0.0625rem 0.25rem;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.adkotm-highlight--A {
+  background-color: var(--pebble-mint-tint);
+  color: var(--pebble-mint-ink);
+  box-shadow: inset 0 0 0 1px var(--pebble-mint);
+}
+
+.adkotm-highlight--D {
+  background-color: var(--pebble-blue-tint);
+  color: var(--pebble-blue-ink);
+  box-shadow: inset 0 0 0 1px rgba(82, 139, 202, 0.45);
+}
+
+.adkotm-highlight--K {
+  background-color: var(--pebble-yellow-tint);
+  color: var(--pebble-yellow-ink);
+  box-shadow: inset 0 0 0 1px rgba(247, 209, 71, 0.7);
+}
+
+.adkotm-highlight--O {
+  background-color: var(--pebble-blush-tint);
+  color: var(--pebble-blush-ink);
+  box-shadow: inset 0 0 0 1px var(--pebble-blush);
+}
+
+.adkotm-highlight--T {
+  background-color: var(--pebble-periwinkle-tint);
+  color: var(--pebble-periwinkle-ink);
+  box-shadow: inset 0 0 0 1px rgba(124, 140, 224, 0.5);
+}
+
+.adkotm-highlight--M {
+  background-color: var(--bg-subtle);
+  color: var(--ink-secondary);
+  box-shadow: inset 0 0 0 1px var(--border-hairline);
+}
+
+/* Direct left-click edge-drag crop handles on highlighted transcript spans */
+.adkotm-edge-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 1.15em;
+  vertical-align: -0.15em;
+  cursor: ew-resize;
+  user-select: none;
+  border-radius: 9999px;
+  opacity: 0;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.group\/hl:hover .adkotm-edge-handle,
+.adkotm-edge-handle:focus-visible,
+.adkotm-edge-handle--active {
+  opacity: 1;
+}
+
+.adkotm-edge-handle:hover {
+  transform: scaleX(1.25);
+}

@@ -1,5 +1,5 @@
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
-import dotenv from 'dotenv';
 import path from 'path';
 import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import {
@@ -27,8 +27,6 @@ import {
   findFieldMeta,
   findUncoveredSentences,
 } from './src/lib/adkotmUtils';
-
-dotenv.config();
 
 const app = express();
 // Port 3000 required by AI Studio runtime (accept CLI argument or fallback)
@@ -100,7 +98,7 @@ app.post('/api/transcribe/audio', async (req: Request, res: Response) => {
 
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured on the server. Please check the Secrets panel.',
+        error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.',
       });
     }
 
@@ -302,7 +300,7 @@ app.post('/api/clean-data', async (req: Request, res: Response) => {
 
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured on the server. Please check the Secrets panel.',
+        error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.',
       });
     }
 
@@ -592,39 +590,40 @@ app.post('/api/translate-english', async (req: Request, res: Response) => {
 
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured on the server. Please check the Secrets panel.',
+        error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.',
       });
     }
 
-    const splitIntoSentenceChunks = (input: string, maxChars = 3200): string[] => {
+    // Chunk by lines/paragraphs so original timestamps, speaker turns, and line breaks are preserved
+    const splitPreservingLines = (input: string, maxChars = 3200): string[] => {
       const normalized = input.trim();
       if (normalized.length <= maxChars) return [normalized];
-      const sentences = normalized.split(/(?<=[.!?])\s+/);
+      const lines = normalized.split(/\r?\n/);
       const chunks: string[] = [];
       let current = '';
-      for (const s of sentences) {
-        if (current && current.length + s.length + 1 > maxChars) {
-          chunks.push(current.trim());
-          current = s;
+      for (const line of lines) {
+        if (current && current.length + line.length + 1 > maxChars) {
+          chunks.push(current);
+          current = line;
         } else {
-          current = current ? `${current} ${s}` : s;
+          current = current ? `${current}\n${line}` : line;
         }
       }
-      if (current.trim()) chunks.push(current.trim());
-      return chunks.filter(Boolean);
+      if (current) chunks.push(current);
+      return chunks.filter((c) => c.trim().length > 0);
     };
 
-    const chunks = splitIntoSentenceChunks(text, 3200);
+    const chunks = splitPreservingLines(text, 3200);
     const routeDeadline = Date.now() + 20000;
 
     const translateChunk = async (chunk: string): Promise<string> => {
-      const prompt = `Translate the following nutrition interview transcript into 100% natural, fluent, grammatically clear English—NOT literal word-for-word translation.
-RULES:
-1. Convert any remaining Malay, Mandarin, Cantonese, Tamil, or Manglish into clear natural English (e.g., "adik, anak, choosing yogurt" -> "my child likes yogurt", "kesihatan sistem dalam" -> "internal digestive system health", "tak ada" -> "no other products"). Leave ZERO untranslated non-English words except brand names.
-2. Preserve exact meaning, pronouns (i, he, she, they, we, you, it, my), negations (no, not), and stopwords.
-3. Keep ALL product and brand names intact verbatim (e.g., yakult, vitagen, nutrilite, amway, bio gaia, sunglo, emmi, farmers union, fernleaf, karihome, epicode, marigold, chobani, milo).
-4. Collapse repeated words/stutters, do NOT add filler words, greetings, questions, or speaker headers.
-5. Output ONLY clean lowercase single-spaced English text with no commentary or markdown fences.
+      const prompt = `Translate the following nutrition interview transcript into natural, faithful English WITHOUT cleaning, summarizing, or removing any content.
+STRICT PURE-TRANSLATION RULES:
+1. Translate all Malay, Mandarin, Cantonese, Tamil, or Manglish utterances into natural English while keeping the exact line-by-line structure of the original transcript.
+2. DO NOT strip or remove timestamps (e.g., [00:12]), speaker headers (e.g., Interviewer:, Participant:), interviewer questions (?), fillers (e.g., uh, um, okay), or phatic expressions (e.g., "okay, thank you.", "hi miss"). Translate them faithfully in place.
+3. Preserve exact meaning, pronouns (I, he, she, they, we, you, it, my), negations (no, not), and stopwords.
+4. Preserve ALL product names, brand names, and venue/mall names verbatim with proper capitalization (e.g., Vitagen, Yakult, Danone, Amway, Nutrilite, Bio Gaia, Sunglo, Emmi, Farmers Union, Fernleaf, Karihome, Epicode, Marigold, Chobani, Milo, Lotus Cheras, Jaya Grocer Elmina Lakeside Mall, AEON Mall Shah Alam, Brem Mall Kepong, Publika).
+5. Output ONLY the raw translated English transcript text with no commentary or markdown fences.
 
 TEXT:
 ${chunk}`;
@@ -679,21 +678,23 @@ ${chunk}`;
       })
     );
 
-    const combined = results.filter(Boolean).join(' ').trim();
-    const normalizedText = removeStuttersAndNormalize(
-      stripQuestionSentences(stripSpeakerHeaders(combined))
-    );
+    // Preserve pure translated text without running speaker/question/stutter/filler removal
+    const pureTranslatedText = results
+      .map((r) => r.trim())
+      .filter(Boolean)
+      .join('\n')
+      .trim();
 
-    if (!normalizedText) {
+    if (!pureTranslatedText) {
       return res.status(502).json({ error: 'Translation returned an empty result. Please retry.' });
     }
 
     return res.json({
       success: true,
       fileName,
-      translatedText: normalizedText,
-      wordCount: countWords(normalizedText),
-      preservedPronounsCount: countPreservedPronouns(normalizedText),
+      translatedText: pureTranslatedText,
+      wordCount: countWords(pureTranslatedText),
+      preservedPronounsCount: countPreservedPronouns(pureTranslatedText),
       translatedAt: new Date().toISOString(),
     });
   } catch (err: any) {
@@ -707,10 +708,14 @@ ${chunk}`;
 
 // Maps API configuration endpoint
 app.get('/api/maps/config', (_req: Request, res: Response) => {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  const apiKey = (process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
+  const configured = apiKey.length > 5;
   res.json({
     apiKey,
-    configured: Boolean(apiKey && apiKey.length > 5),
+    configured,
+    message: configured
+      ? undefined
+      : 'Google Maps API key is not configured. Set GOOGLE_MAPS_API_KEY or VITE_GOOGLE_MAPS_API_KEY in .env.',
     defaultCenter: { lat: 3.1390, lng: 101.6869 }, // Klang Valley / KL
     defaultZoom: 11,
   });
@@ -888,7 +893,7 @@ app.post('/api/decode/adkotm', async (req: Request, res: Response) => {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' });
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.' });
     }
 
     const finalDecode = await runAdkotmDecodeWithGemini(
@@ -1035,7 +1040,7 @@ app.post('/api/copilot/suggest', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing record transcript to inspect' });
     }
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' });
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.' });
     }
 
     const currentFieldStates = record.adkotmDecode?.fieldStates || {};
@@ -1223,7 +1228,7 @@ app.post('/api/copilot/redecode-rules', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing target records to re-decode' });
     }
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' });
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.' });
     }
 
     const diffs: any[] = [];
@@ -1932,7 +1937,7 @@ app.post('/api/ai-assistant/chat', async (req: Request, res: Response) => {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' });
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server. Add GEMINI_API_KEY=... to your local .env file and restart the dev server.' });
     }
 
     const eligibleRecords = Array.isArray(records) ? records.filter((r: any) => isHumanVerifiedRecord(r)) : [];

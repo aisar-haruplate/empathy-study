@@ -1281,6 +1281,24 @@ export const cleanTranscriptWithPipeline = async (
   });
 };
 
+export const translateTranscriptToEnglish = async (
+  params: {
+    rawText: string;
+    fileName?: string;
+  },
+  postJson: <T = any>(url: string, payload: any) => Promise<T>
+): Promise<{
+  translatedText: string;
+  wordCount: number;
+  preservedPronounsCount: number;
+  translatedAt?: string;
+}> => {
+  return postJson('/api/translate-english', {
+    text: params.rawText,
+    fileName: params.fileName || 'Transcript',
+  });
+};
+
 export const aiCleanTranscript = cleanTranscriptWithPipeline;
 
 /**
